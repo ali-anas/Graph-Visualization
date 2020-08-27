@@ -1,6 +1,3 @@
-/*
- * TODO: complete this file comment.
- */
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -21,14 +18,16 @@ unsigned int readSimulationTime(const string& prompt = "Enter simulation time : 
 // Main method
 int main() {
     Welcome();
-    /* TODO: your implementation here */
 
     // initialize graph object
     SimpleGraph graph;
     ifstream stream;
     openFileAndSetStream(stream);
+
+    // read the graph from disk
     readGraph(graph, stream);
 
+    // implement the code to take time of simulation
     unsigned int stime = readSimulationTime();
 
 
@@ -36,7 +35,7 @@ int main() {
 
     // implement FDL algorithm
 
-    // implement the code to take time of simulation
+
 
     return 0;
 }
@@ -71,6 +70,51 @@ void openFileAndSetStream(ifstream& stream, const string& prompt,
         }
 
         cerr << reprompt << endl;
+    }
+}
+
+
+/*
+struct Node {
+  double x, y;
+};
+
+struct Edge {
+  std::size_t start, end;
+};
+
+struct SimpleGraph {
+    std::vector<Node> nodes;
+    std::vector<Edge> edges;
+};
+*/
+
+void readGraph(SimpleGraph& graph, ifstream& stream) {
+    unsigned int n;
+    stream >> n;
+    // set no of nodes of graph
+    graph.nodes.resize(n);
+
+    size_t start, end;
+    while(stream >> start >> end) {
+        graph.edges.push_back(Edge{start, end});
+    }
+}
+
+unsigned int readSimulationTime(const string& prompt, const string& repromt) {
+    while(true) {
+        cout << prompt;
+        string line; int result; char garbage;
+        if(!getline(cin, line)) {
+            throw domain_error("getline: End of input reached while waiting for line.");
+        }
+        istringstream iss(line);
+        if((iss >> result) && (!iss >> garbage) && result >= 0) {
+            return static_cast<unsigned int>(result);
+        }
+
+        cout << repromt;
+
     }
 }
 
