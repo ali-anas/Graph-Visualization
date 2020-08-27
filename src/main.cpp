@@ -8,11 +8,11 @@ using namespace std;
 
 void Welcome();
 void openFileAndSetStream(ifstream& stream, const string& prompt = "Enter file name: ",
-               const string& repromt = "Unable to open that file... Try again.");
+               const string& reprompt = "Unable to open that file... Try again.");
 void readGraph(SimpleGraph& graph, ifstream& stream);
 
 unsigned int readSimulationTime(const string& prompt = "Enter simulation time : ",
-                                const string& reprompt = "Bad input! (should be an integer >= 0) Try again...");
+                                const string& reprompt = "Bad input! (should be an integer >= 0)... Try again.");
 
 
 
@@ -66,11 +66,12 @@ void openFileAndSetStream(ifstream& stream, const string& prompt,
             stream.clear();
             stream.open(filename);
             if (stream.is_open()) {
+                cout << "Opening file stream... Success" << endl;
                 return;
             }
         }
 
-        cerr << reprompt << endl;
+        cerr << reprompt << "\n";
     }
 }
 
@@ -100,10 +101,11 @@ void readGraph(SimpleGraph& graph, ifstream& stream) {
     while(stream >> start >> end) {
         graph.edges.push_back(Edge{start, end});
     }
+    cout << "Loading graph...Success" << endl;
 }
 
 
-unsigned int readSimulationTime(const string& prompt, const string& repromt) {
+unsigned int readSimulationTime(const string& prompt, const string& reprompt) {
     while(true) {
         cout << prompt;
         string line; int result; char garbage;
@@ -111,11 +113,12 @@ unsigned int readSimulationTime(const string& prompt, const string& repromt) {
             throw domain_error("getline: End of input reached while waiting for line.");
         }
         istringstream iss(line);
-        if((iss >> result) && !(iss >> garbage) && result >= 0) {
-            return static_cast<unsigned int>(result);
+        if(iss >> result && !(iss >> garbage) && !(result < 0)) {
+            cout << "Reading simulation time... Success" << endl;
+            return result;
         }
 
-        cout << repromt;
+        cerr << reprompt << "\n";
 
     }
 }
