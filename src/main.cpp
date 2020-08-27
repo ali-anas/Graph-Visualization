@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <string>
 #include "SimpleGraph.h"
@@ -11,7 +12,7 @@ void openFileAndSetStream(ifstream& stream, const string& prompt = "Enter file n
 void readGraph(SimpleGraph& graph, ifstream& stream);
 
 unsigned int readSimulationTime(const string& prompt = "Enter simulation time : ",
-                                const string& reprompt = "Bad input!(should be > 0) Try again...");
+                                const string& reprompt = "Bad input! (should be an integer >= 0) Try again...");
 
 
 
@@ -102,3 +103,19 @@ void readGraph(SimpleGraph& graph, ifstream& stream) {
 }
 
 
+unsigned int readSimulationTime(const string& prompt, const string& repromt) {
+    while(true) {
+        cout << prompt;
+        string line; int result; char garbage;
+        if(!getline(cin, line)) {
+            throw domain_error("getline: End of input reached while waiting for line.");
+        }
+        istringstream iss(line);
+        if((iss >> result) && !(iss >> garbage) && result >= 0) {
+            return static_cast<unsigned int>(result);
+        }
+
+        cout << repromt;
+
+    }
+}
