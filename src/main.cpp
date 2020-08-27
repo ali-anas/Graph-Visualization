@@ -101,21 +101,4 @@ void readGraph(SimpleGraph& graph, ifstream& stream) {
     }
 }
 
-unsigned int readSimulationTime(const string& prompt, const string& repromt) {
-    while(true) {
-        cout << prompt;
-        string line; int result; char garbage;
-        if(!getline(cin, line)) {
-            throw domain_error("getline: End of input reached while waiting for line.");
-        }
-        istringstream iss(line);
-        if((iss >> result) && (!iss >> garbage) && result >= 0) {
-            return static_cast<unsigned int>(result);
-        }
-
-        cout << repromt;
-
-    }
-}
-
 
