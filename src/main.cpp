@@ -1,8 +1,21 @@
+/*
+ * Provided functions -
+ *      InitGraphVisualizer(SimpleGraph)
+ *          accepts a SimpleGraph, sets up the internal state of the visualizer,
+ *
+ *      DrawGraph(SimpleGraph)
+ *          accepts a SimpleGraph and displays it on screen
+ */
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <cmath>
+
 #include "SimpleGraph.h"
+
+const double pi = 3.14159265358979323;
 
 using namespace std;
 
@@ -14,7 +27,7 @@ void readGraph(SimpleGraph& graph, ifstream& stream);
 unsigned int readSimulationTime(const string& prompt = "Enter simulation time : ",
                                 const string& reprompt = "Bad input! (should be an integer >= 0)... Try again.");
 
-
+void setInitialNodePosition(SimpleGraph& graph);
 
 // Main method
 int main() {
@@ -31,8 +44,18 @@ int main() {
     // implement the code to take time of simulation
     unsigned int stime = readSimulationTime();
 
+    // visualize graph
+    InitGraphVisualizer(graph);
 
-    // set initial positions of nodes
+    // set initial positions to nodes
+    setInitialNodePosition(graph);
+
+    // Draw graph
+    DrawGraph(graph);
+    cout << "Visualizing graph..." << endl;
+
+
+
 
     // implement FDL algorithm
 
@@ -77,6 +100,7 @@ void openFileAndSetStream(ifstream& stream, const string& prompt,
 
 
 /*
+ * From SimpleGraph.h
 struct Node {
   double x, y;
 };
@@ -104,6 +128,10 @@ void readGraph(SimpleGraph& graph, ifstream& stream) {
     cout << "Loading graph...Success" << endl;
 }
 
+/*
+ * Read simulation time of algorithm
+ *      must be positive integer
+ */
 
 unsigned int readSimulationTime(const string& prompt, const string& reprompt) {
     while(true) {
@@ -115,10 +143,24 @@ unsigned int readSimulationTime(const string& prompt, const string& reprompt) {
         istringstream iss(line);
         if(iss >> result && !(iss >> garbage) && !(result < 0)) {
             cout << "Reading simulation time... Success" << endl;
-            return result;
+            return static_cast<unsigned int>(result);
         }
 
         cerr << reprompt << "\n";
 
+    }
+}
+
+/*
+ * set initial x and y co-ordinate of each node at pos k as
+ * (cos(2*pi*k / n), sin(2*pi*k / n))
+ */
+
+void setInitialNodePosition(SimpleGraph& graph) {
+    size_t num_of_nodes = graph.nodes.size();
+
+    for(size_t node_pos = 0; node_pos < num_of_nodes; node_pos++) {
+        graph.nodes[node_pos].x = cos((2*pi*node_pos) / num_of_nodes);
+        graph.nodes[node_pos].y = sin((2*pi*node_pos) / num_of_nodes);
     }
 }
