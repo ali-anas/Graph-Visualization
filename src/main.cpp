@@ -12,10 +12,13 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <ctime>
 
 #include "SimpleGraph.h"
 
-const double pi = 3.14159265358979323;
+const double PI = 3.14159265358979323;
+const double K_REPEL = 0.001;
+const double K_ATTRACT = 0.001;
 
 using namespace std;
 
@@ -28,6 +31,11 @@ unsigned int readSimulationTime(const string& prompt = "Enter simulation time : 
                                 const string& reprompt = "Bad input! (should be an integer >= 0)... Try again.");
 
 void setInitialNodePosition(SimpleGraph& graph);
+
+void updateGraph(SimpleGraph& graph);
+
+void applyAttractiveForcesAndUpdateDelta(SimpleGraph& graph,vector<Node>& delta);
+void applyRepulsiveForcesAndUpdateDelta(SimpleGraph& graph,vector<Node>& delta);
 
 // Main method
 int main() {
@@ -45,21 +53,25 @@ int main() {
     unsigned int stime = readSimulationTime();
 
     // visualize graph
-    InitGraphVisualizer(graph);
+    InitGraphVisualizer(graph);     // from SimpleGraph.h
 
     // set initial positions to nodes
     setInitialNodePosition(graph);
 
     // Draw graph
-    DrawGraph(graph);
+    DrawGraph(graph);   // from SimpleGraph.h
     cout << "Visualizing graph..." << endl;
 
-
-
-
+    // simulate graph for time- stime
     // implement FDL algorithm
+    time_t startTime = time(NULL);
+    while(difftime(time(NULL), startTime) < stime) {
+        updateGraph(graph);
+        DrawGraph(graph);
+    }
 
-
+    cout << "Visualization Completed..." << endl;
+    cout << "Exiting Normally...";
 
     return 0;
 }
@@ -160,7 +172,70 @@ void setInitialNodePosition(SimpleGraph& graph) {
     size_t num_of_nodes = graph.nodes.size();
 
     for(size_t node_pos = 0; node_pos < num_of_nodes; node_pos++) {
-        graph.nodes[node_pos].x = cos((2*pi*node_pos) / num_of_nodes);
-        graph.nodes[node_pos].y = sin((2*pi*node_pos) / num_of_nodes);
+        graph.nodes[node_pos].x = cos((2 * PI * node_pos) / num_of_nodes);
+        graph.nodes[node_pos].y = sin((2 * PI * node_pos) / num_of_nodes);
+    }
+}
+
+/*
+ * Update delta after calculating repulsive force on each node
+ * due to every other node
+ */
+void applyRepulsiveForcesAndUpdateDelta(SimpleGraph& graph,vector<Node>& delta) {
+    for(size_t i = 0; i < delta.size(); i++) {
+        for(size_t j = 0; j < delta.size(); j++) {
+            if(i != j) {
+                Node first = graph.nodes[i];
+                Node second = graph.nodes[j];
+                double force_repel = K_REPEL / sqrt(pow(second.y - first.y,2) + pow(second.x - first.x, 2));
+                double theta = atan2(second.y - first.y, second.x - first.x);
+
+                delta[i].x -= force_repel * cos(theta);
+                delta[i].y -= force_repel * sin(theta);
+                delta[j].x += force_repel * cos(theta);
+                delta[j].y += force_repel * sin(theta);
+            }
+        }
+    }
+}
+
+/*
+ * Update delta after calculating attractive force on each node
+ * due to every other node connected with common edge
+ */
+void applyAttractiveForcesAndUpdateDelta(SimpleGraph& graph,vector<Node>& delta) {
+
+    for(size_t i = 0; i < graph.edges.size(); i++) {
+        Edge e = graph.edges[i];
+        Node first = graph.nodes[e.start];
+        Node second = graph.nodes[e.end];
+
+        double force_attract = K_ATTRACT * (pow(second.y - first.y,2) + pow(second.x - first.x, 2));
+        double theta = atan2(second.y - first.y, second.x - first.x);
+
+        delta[e.start].x += force_attract * cos(theta);
+        delta[e.start].y += force_attract * sin(theta);
+        delta[e.end].x -= force_attract * cos(theta);
+        delta[e.end].y -= force_attract * sin(theta);
+    }
+}
+
+
+
+/*
+ * compute resultant delta by applying attractive forces and repulsive forces
+ * to each node by every other node
+ * resultant of forces might change x & y component of each node
+ */
+void updateGraph(SimpleGraph& graph) {
+    vector<Node> delta(graph.nodes.size());
+
+    applyRepulsiveForcesAndUpdateDelta(graph, delta);
+    applyAttractiveForcesAndUpdateDelta(graph, delta);
+
+    // update position of each node according to delta
+    for(size_t i = 0; i < graph.nodes.size(); i++) {
+        graph.nodes[i].x += delta[i].x;
+        graph.nodes[i].y += delta[i].y;
     }
 }
