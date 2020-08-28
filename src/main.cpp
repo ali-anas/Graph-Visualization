@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <vector>
 #include <string>
 #include <cmath>
 #include <ctime>
@@ -27,7 +28,7 @@ void openFileAndSetStream(ifstream& stream, const string& prompt = "Enter file n
                const string& reprompt = "Unable to open that file... Try again.");
 void readGraph(SimpleGraph& graph, ifstream& stream);
 
-unsigned int readSimulationTime(const string& prompt = "Enter simulation time : ",
+unsigned int readSimulationTime(const string& prompt = "Enter simulation time(in sec) : ",
                                 const string& reprompt = "Bad input! (should be an integer >= 0)... Try again.");
 
 void setInitialNodePosition(SimpleGraph& graph);
@@ -37,41 +38,52 @@ void updateGraph(SimpleGraph& graph);
 void applyAttractiveForcesAndUpdateDelta(SimpleGraph& graph,vector<Node>& delta);
 void applyRepulsiveForcesAndUpdateDelta(SimpleGraph& graph,vector<Node>& delta);
 
+bool promptUserForMoreVisualization(const string& prompt = "Do you want to visualize another graph? (Y/N): ",
+                                    const string& reprompt = "Can't get your choice... Try again.");
+
 // Main method
 int main() {
     Welcome();
 
-    // initialize graph object
-    SimpleGraph graph;
-    ifstream stream;
-    openFileAndSetStream(stream);
+    bool is_to_visualize_more = false;
+    do {
+        // initialize graph object
+        SimpleGraph graph;
+        ifstream stream;
+        openFileAndSetStream(stream);
 
-    // read the graph from disk
-    readGraph(graph, stream);
+        // read the graph from disk
+        readGraph(graph, stream);
 
-    // implement the code to take time of simulation
-    unsigned int stime = readSimulationTime();
+        // visualize graph
+        InitGraphVisualizer(graph);     // from SimpleGraph.h
 
-    // visualize graph
-    InitGraphVisualizer(graph);     // from SimpleGraph.h
+        // set initial positions to nodes
+        setInitialNodePosition(graph);
 
-    // set initial positions to nodes
-    setInitialNodePosition(graph);
+        // First Draw initial graph then after ask for simulation time.
+        DrawGraph(graph);   // from SimpleGraph.h
 
-    // Draw graph
-    DrawGraph(graph);   // from SimpleGraph.h
-    cout << "Visualizing graph..." << endl;
+        // implement the code to take time of simulation
+        unsigned int stime = readSimulationTime();
 
-    // simulate graph for time- stime
-    // implement FDL algorithm
-    time_t startTime = time(NULL);
-    while(difftime(time(NULL), startTime) < stime) {
-        updateGraph(graph);
-        DrawGraph(graph);
-    }
+        cout << "Visualizing graph..." << endl;
 
-    cout << "Visualization Completed..." << endl;
-    cout << "Exiting Normally...";
+        // simulate graph for time- stime
+        // implement FDL algorithm
+        time_t startTime = time(NULL);
+        while(difftime(time(NULL), startTime) < stime) {
+            updateGraph(graph);
+            DrawGraph(graph);
+        }
+
+        cout << "Visualization Completed..." << endl;
+
+        is_to_visualize_more = promptUserForMoreVisualization();
+    } while(is_to_visualize_more);
+
+
+    cout << "Exiting Normally... Press ctrl+c to close the window." << endl;
 
     return 0;
 }
@@ -79,13 +91,44 @@ int main() {
 /* Prints a message to the console welcoming the user and
  * describing the program. */
 void Welcome() {
-    cout << "Welcome to CS106L GraphViz!" << endl;
+    cout << "Welcome to GraphViz!" << endl;
     cout << "This program uses a force-directed graph layout algorithm" << endl;
     cout << "to render sleek, snazzy pictures of various graphs." << endl;
+    cout << "Please decide simulation time appropraitely, some" << endl;
+    cout << "graphs structure takes 1-5 sec to get into better shape" << endl;
+    cout << "while some may take 25-30 even 60-80 sec(ex-10grid) to get" << endl;
+    cout << "into better shape." << endl;
     cout << endl;
 }
 
+/*
+ * prompt user if he wants to visualize another graph or wants to exit.
+ */
 
+bool promptUserForMoreVisualization(const string& prompt, const string& reprompt) {
+
+    while(true) {
+        cout << prompt;
+        string line;
+        char choice; char trash;
+
+        if(!getline(cin, line)) {
+            throw domain_error("getline: End of input reached while waiting for line.");
+        }
+
+        istringstream iss(line);
+        if(iss >> choice && !(iss >> trash)) {
+            if(choice=='y' || choice=='Y') {
+                return true;
+            }
+            if(choice == 'N' || choice == 'n') {
+                return false;
+            }
+        }
+        cerr << reprompt << "\n";
+    }
+
+}
 
 void openFileAndSetStream(ifstream& stream, const string& prompt,
                const string &reprompt) {
